@@ -32,7 +32,7 @@ while [ "$elapsed" -lt "$OPENOCD_STARTUP_TIMEOUT" ]; do
 		exit 1
 	fi
 
-	if grep -Eq "Listening on port [0-9]+ for gdb connections" "$OPENOCD_LOG" 2>/dev/null; then
+	if grep -Eq "Listening on port ${GDB_PORT} for gdb connections" "$OPENOCD_LOG" 2>/dev/null; then
 		ready=1
 		break
 	fi
