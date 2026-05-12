@@ -2,7 +2,7 @@
 set -eu
 
 DEST="${1:-external/LuatOS}"
-REPO_URL="${LUATOS_REPO_URL:-https://gitee.com/openLuat/LuatOS.git}"
+REPO_URL="${LUATOS_REPO_URL:-https://github.com/openLuat/LuatOS.git}"
 REF="${LUATOS_REF:-master}"
 
 if [ -e "$DEST" ] && [ ! -d "$DEST/.git" ]; then
@@ -17,7 +17,9 @@ if [ -d "$DEST/.git" ]; then
 	git -C "$DEST" checkout "$REF"
 	if ! git -C "$DEST" pull --ff-only origin "$REF"; then
 		echo "Fast-forward update failed for $DEST." >&2
-		echo "Please inspect local changes or branch divergence before re-running the sync." >&2
+		git -C "$DEST" status --short --branch >&2 || true
+		echo "Please inspect local changes, detached HEAD state, or branch divergence before re-running the sync." >&2
+		echo "Suggested recovery: commit/stash local changes, checkout $REF, then retry." >&2
 		exit 1
 	fi
 else

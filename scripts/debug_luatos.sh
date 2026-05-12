@@ -25,6 +25,7 @@ trap cleanup EXIT INT TERM
 sleep "$OPENOCD_STARTUP_DELAY"
 
 if ! kill -0 "$OPENOCD_PID" 2>/dev/null; then
+	echo "OpenOCD failed to start. Log output:" >&2
 	cat "$OPENOCD_LOG" >&2
 	exit 1
 fi

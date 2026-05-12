@@ -2,9 +2,10 @@
 
 ## 目标
 
-- 在 STM32N647 上完成 LuatOS 的基础移植和可持续开发骨架
+- 在 STM32N647 上完成 `openLuat/LuatOS` 主仓库的基础移植和可持续开发骨架
 - 让仓库一开始就具备计划、测试、构建入口、CI、开发流程、Git 规则与 AI 协作约束
 - 为后续 BSP、驱动、板级调试和自动化烧录留出统一入口
+- 以“跑起 AirUI”作为阶段性验收目标，驱动端口、显示链路和输入链路围绕该目标展开
 
 ## 推荐仓库结构
 
@@ -27,7 +28,7 @@
 └── toolchains/             # 交叉编译工具链配置
 ```
 
-这个结构参考了常见 STM32 固件仓库的拆分方式：文档、脚本、CI、上游依赖、本地端口层和测试职责分离，适合后续逐步导入 LuatOS、HAL/CMSIS 以及板级 BSP。
+这个结构参考了常见 STM32 固件仓库的拆分方式：文档、脚本、CI、上游依赖、本地端口层和测试职责分离，适合后续逐步导入 `openLuat/LuatOS` 主仓库、HAL/CMSIS 以及板级 BSP。
 
 ## 开发计划
 
@@ -45,13 +46,15 @@
 
 ### P2：LuatOS 移植
 
-- 拉取 LuatOS 上游代码到 `external/LuatOS`
+- 拉取 `https://github.com/openLuat/LuatOS` 主仓库代码到 `external/LuatOS`
 - 对接内存管理、系统时钟、日志、任务调度、tick、中断入口
 - 跑通最小 Lua 脚本和串口 REPL
+- 让 AirUI 示例先在开发板上启动，作为 UI/显示链路可用的首个验收点
 
 ### P3：外设与板级能力
 
 - GPIO / UART / SPI / I2C / ADC / PWM 基础驱动
+- 显示、触摸、显存和资源加载链路优先满足 AirUI 运行要求
 - 文件系统、存储、网络等按板卡资源逐步接入
 - 形成功能矩阵和回归用例
 
@@ -65,10 +68,11 @@
 
 | 测试类型 | 用例 | 触发时机 | 通过标准 |
 | --- | --- | --- | --- |
-| 仓库校验 | 文档/脚本/CI 资产完整性检查 | 每次 push / PR | `make ci` 通过 |
-| Host 校验 | 配置脚本、代码生成脚本、包同步脚本 | 本地 / CI | Shell 语法正确，关键路径存在 |
+| 仓库校验 | 文档/脚本/CI 资产完整性检查 | 每次 push/PR | `make ci` 通过 |
+| Host 校验 | 配置脚本、代码生成脚本、包同步脚本 | 本地/CI | Shell 语法正确，关键路径存在 |
 | 板级烟测 | 上电日志、心跳灯、串口 REPL | 每次 bring-up | 启动后 5 秒内输出版本日志 |
 | LuatOS 基础 | Lua 脚本执行、内存分配、定时器 | 每次端口变更 | 样例脚本运行成功 |
+| AirUI 验收 | AirUI 示例界面启动、刷新、输入响应 | 显示/UI 链路变更后 | AirUI 成功显示并可交互 |
 | 驱动回归 | UART/SPI/I2C/GPIO 回环或设备访问 | 驱动提交前 | 结果符合预期，日志无异常 |
 | 下载调试 | OpenOCD 连接、GDB load/reset | 每次调试脚本变更 | 可连接 target 并装载 ELF |
 | AI 协作 | AI 生成代码后是否补齐文档和测试 | 每次 AI 参与提交 | PR 模板项全部满足 |
@@ -92,7 +96,7 @@
 - `make lint`: 校验 shell 脚本语法
 - `make test`: 校验仓库骨架与文档关键章节
 - `make ci`: CI 统一入口，串行执行 lint + test
-- `make fetch-luatos DEST=external/LuatOS`: 下载或同步 LuatOS 上游
+- `make fetch-luatos DEST=external/LuatOS`: 下载或同步 `openLuat/LuatOS` 主仓库
 - `make debug`: 调起 OpenOCD + GDB 调试流程
 
 后续在 P1/P2 阶段扩展：
@@ -126,7 +130,7 @@ PR 基本流程：
 2. 从 `main` 拉出 `feature/<topic>` 分支
 3. AI 编写前先阅读本文档和 `.github/copilot-instructions.md`
 4. 本地执行 `make ci`
-5. 涉及固件逻辑时补充对应测试用例或 HIL 说明
+5. 涉及固件逻辑时补充对应测试用例或 HIL 说明；如果影响显示/UI 链路，要补充 AirUI 验证记录
 6. 提交 PR，经过 review + CI 后合并
 7. 版本节点使用 tag 管理，里程碑同步更新文档
 
@@ -150,8 +154,8 @@ PR 基本流程：
 
 ### 自动化下载
 
-- 通过 `scripts/download_luatos.sh` 同步 LuatOS 上游
-- 默认上游地址：`https://gitee.com/openLuat/LuatOS.git`
+- 通过 `scripts/download_luatos.sh` 同步 `openLuat/LuatOS` 主仓库
+- 默认上游地址：`https://github.com/openLuat/LuatOS.git`
 - 支持通过 `LUATOS_REPO_URL`、`LUATOS_REF` 覆盖源和分支
 
 ### 自动化调试
@@ -164,6 +168,7 @@ PR 基本流程：
   - 本地调试统一入口
   - 自托管 runner 的调试烟测步骤
   - AI 修改代码后的标准化验证脚本
+  - AirUI bring-up 阶段的显示/输入问题定位入口
 
 ## 当前最小落地资产
 
