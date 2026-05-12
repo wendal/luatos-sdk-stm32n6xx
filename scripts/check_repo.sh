@@ -44,12 +44,12 @@ done <<'EOF'
 ## AI编写/自动化下载/调试
 EOF
 
-if ! grep -Fq "make ci" README.md; then
+if ! grep -Eq '^[[:space:]]*make ci[[:space:]]*$' README.md; then
 	echo "README.md must document the make ci entrypoint." >&2
 	exit 1
 fi
 
-if ! grep -Fq "run: make ci" .github/workflows/ci.yml; then
+if ! grep -Eq '^[[:space:]]*run:[[:space:]]*make ci[[:space:]]*$' .github/workflows/ci.yml; then
 	echo ".github/workflows/ci.yml must invoke make ci." >&2
 	exit 1
 fi

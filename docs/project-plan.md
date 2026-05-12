@@ -155,7 +155,7 @@ PR 基本流程：
 ### 自动化下载
 
 - 通过 `scripts/download_luatos.sh` 同步 `openLuat/LuatOS` 主仓库
-- 默认上游地址：`https://github.com/openLuat/LuatOS.git`
+- 默认使用脚本内置的 GitHub 主仓库地址，也可通过 `LUATOS_REPO_URL` 覆盖
 - 支持通过 `LUATOS_REPO_URL`、`LUATOS_REF` 覆盖源和分支
 
 ### 自动化调试

@@ -2,6 +2,8 @@ SHELL := /bin/sh
 
 .DEFAULT_GOAL := help
 
+DEST ?= external/LuatOS
+
 SCRIPTS := scripts/check_repo.sh scripts/debug_luatos.sh scripts/download_luatos.sh
 
 .PHONY: help lint test ci fetch-luatos debug

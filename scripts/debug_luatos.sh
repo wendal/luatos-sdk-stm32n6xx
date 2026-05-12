@@ -8,7 +8,7 @@ OPENOCD_BIN="${OPENOCD_BIN:-openocd}"
 GDB_BIN="${GDB_BIN:-arm-none-eabi-gdb}"
 GDB_PORT="${GDB_PORT:-3333}"
 OPENOCD_LOG="${OPENOCD_LOG:-/tmp/luatos-stm32n647-openocd.log}"
-OPENOCD_STARTUP_DELAY="${OPENOCD_STARTUP_DELAY:-2}"
+OPENOCD_STARTUP_TIMEOUT="${OPENOCD_STARTUP_TIMEOUT:-10}"
 
 "$OPENOCD_BIN" -f "$OPENOCD_CFG" >"$OPENOCD_LOG" 2>&1 &
 OPENOCD_PID=$!
@@ -22,10 +22,27 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-sleep "$OPENOCD_STARTUP_DELAY"
+ready=0
+elapsed=0
 
-if ! kill -0 "$OPENOCD_PID" 2>/dev/null; then
-	echo "OpenOCD failed to start. Log output:" >&2
+while [ "$elapsed" -lt "$OPENOCD_STARTUP_TIMEOUT" ]; do
+	if ! kill -0 "$OPENOCD_PID" 2>/dev/null; then
+		echo "OpenOCD failed to start. Log output:" >&2
+		cat "$OPENOCD_LOG" >&2
+		exit 1
+	fi
+
+	if grep -Eq "Listening on port [0-9]+ for gdb connections" "$OPENOCD_LOG" 2>/dev/null; then
+		ready=1
+		break
+	fi
+
+	sleep 1
+	elapsed=$((elapsed + 1))
+done
+
+if [ "$ready" -ne 1 ]; then
+	echo "OpenOCD did not become ready within ${OPENOCD_STARTUP_TIMEOUT}s. Log output:" >&2
 	cat "$OPENOCD_LOG" >&2
 	exit 1
 fi
