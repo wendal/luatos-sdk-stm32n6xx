@@ -15,7 +15,11 @@ if [ -d "$DEST/.git" ]; then
 	git -C "$DEST" remote set-url origin "$REPO_URL"
 	git -C "$DEST" fetch origin
 	git -C "$DEST" checkout "$REF"
-	git -C "$DEST" pull --ff-only origin "$REF"
+	if ! git -C "$DEST" pull --ff-only origin "$REF"; then
+		echo "Fast-forward update failed for $DEST." >&2
+		echo "Please inspect local changes or branch divergence before re-running the sync." >&2
+		exit 1
+	fi
 else
 	echo "Cloning LuatOS from $REPO_URL ($REF) into $DEST"
 	mkdir -p "$(dirname "$DEST")"
